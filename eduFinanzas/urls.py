@@ -21,7 +21,8 @@ from temas.views import TemaViewSet
 from usuarios.views import UsuarioViewSet
 from perfiles.views import PerfilViewSet
 from retos.views import RetoViewSet
-
+from tips.views import TipPeriodicaViewSet
+from progresos.views import ProgresoViewSet
 
 # Crear el router y registrar el ViewSet
 router = DefaultRouter()
@@ -29,6 +30,8 @@ router.register(r'temas', TemaViewSet, basename='temas')
 router.register(r'usuarios', UsuarioViewSet, basename='usuarios')
 router.register(r'perfiles', PerfilViewSet, basename='perfiles')
 router.register(r'retos', RetoViewSet, basename='retos')
+router.register(r'tips', TipPeriodicaViewSet, basename='tips')
+router.register(r'progresos', ProgresoViewSet, basename='progresos')
 
 # Definir las rutas principales
 urlpatterns = [
