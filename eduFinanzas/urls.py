@@ -20,12 +20,15 @@ from rest_framework.routers import DefaultRouter
 from temas.views import TemaViewSet
 from usuarios.views import UsuarioViewSet
 from perfiles.views import PerfilViewSet
+from retos.views import RetoViewSet
+
 
 # Crear el router y registrar el ViewSet
 router = DefaultRouter()
 router.register(r'temas', TemaViewSet, basename='temas')
 router.register(r'usuarios', UsuarioViewSet, basename='usuarios')
 router.register(r'perfiles', PerfilViewSet, basename='perfiles')
+router.register(r'retos', RetoViewSet, basename='retos')
 
 # Definir las rutas principales
 urlpatterns = [
