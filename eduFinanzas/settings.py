@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'temas',
     'usuarios',
     'perfiles',
+    'tips',
 ]
 
 MIDDLEWARE = [
