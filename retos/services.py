@@ -4,7 +4,7 @@ def retos_crear(tipo_pregunta, nombre_reto, id_tema, descripcion, recompensa_mon
                 respuesta_uno, respuesta_dos, respuesta_tres, respuesta_cuatro, respuestaCorrecta):
     try:
         with connection.cursor() as cursor:
-            cursor.callproc('crear_reto', [
+            cursor.callproc('retos_crear', [
                 tipo_pregunta, nombre_reto, id_tema, descripcion,
                 recompensa_monedas, respuesta_uno, respuesta_dos,
                 respuesta_tres, respuesta_cuatro, respuestaCorrecta
@@ -16,7 +16,7 @@ def retos_crear(tipo_pregunta, nombre_reto, id_tema, descripcion, recompensa_mon
 
 def reto_ver(id_reto: int):
     with connection.cursor() as cursor:
-        cursor.callproc('ver_reto', [id_reto])
+        cursor.callproc('reto_ver', [id_reto])
         row = cursor.fetchone()
         if not row:
             return None
@@ -36,7 +36,7 @@ def reto_ver(id_reto: int):
 
 def retos_listar():
     with connection.cursor() as cursor:
-        cursor.callproc('listar_reto')
+        cursor.callproc('retos_listar')
         rows = cursor.fetchall()
         return [
             {
@@ -58,7 +58,7 @@ def retos_actualizar(id_reto, tipo_pregunta, nombre_reto, id_tema, descripcion,
                      recompensa_monedas, respuesta_uno, respuesta_dos,
                      respuesta_tres, respuesta_cuatro, respuestaCorrecta) -> int:
     with connection.cursor() as cursor:
-        cursor.callproc('actualizar_reto', [
+        cursor.callproc('retos_actualizar', [
             id_reto, tipo_pregunta, nombre_reto, id_tema, descripcion,
             recompensa_monedas, respuesta_uno, respuesta_dos,
             respuesta_tres, respuesta_cuatro, respuestaCorrecta
@@ -68,7 +68,7 @@ def retos_actualizar(id_reto, tipo_pregunta, nombre_reto, id_tema, descripcion,
 
 def retos_eliminar(id_reto: int) -> int:
     with connection.cursor() as cursor:
-        cursor.callproc('eliminar_reto', [id_reto])
+        cursor.callproc('retos_eliminar', [id_reto])
         row = cursor.fetchone()
         return int(row[0]) if row else 0
 

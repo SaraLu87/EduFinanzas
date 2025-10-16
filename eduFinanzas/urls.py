@@ -23,6 +23,7 @@ from perfiles.views import PerfilViewSet
 from retos.views import RetoViewSet
 from tips.views import TipPeriodicaViewSet
 from progresos.views import ProgresoViewSet
+from solucionarReto.views import SolucionRetoView
 
 # Crear el router y registrar el ViewSet
 router = DefaultRouter()
@@ -37,6 +38,7 @@ router.register(r'progresos', ProgresoViewSet, basename='progresos')
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
+    path('api/solucionar_reto/', SolucionRetoView.as_view(), name='solucionar_reto'),
 ]
 
 

@@ -1,5 +1,4 @@
 from django.db import models
-from temas.models import Temas
 
 class Retos(models.Model):
     id_reto = models.AutoField(primary_key=True)
@@ -13,4 +12,8 @@ class Retos(models.Model):
     respuesta_tres = models.CharField(max_length=100)
     respuesta_cuatro = models.CharField(max_length=100)
     respuestaCorrecta = models.CharField(max_length=100)
+    
+    class Meta:
+        managed = False  # Django no manejará esta tabla (ya existe en MySQL)
+        db_table = 'retos'
 # Create your models here.
