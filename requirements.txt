@@ -1,0 +1,11 @@
+# --- Framework principal ---
+Flask==3.0.3
+
+# --- Permitir solicitudes desde tu frontend (React, por ejemplo) ---
+Flask-Cors==4.0.0
+
+# --- Conexión con MySQL ---
+PyMySQL==1.1.1
+
+# --- Manejo de variables de entorno (.env) ---
+python-dotenv==1.0.1
