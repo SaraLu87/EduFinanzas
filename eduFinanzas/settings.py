@@ -39,10 +39,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'reste_framework',
-    'home',
+    'rest_framework',
     'solucionarReto',
     'retos',
+    'temas'
 ]
 
 MIDDLEWARE = [
@@ -84,7 +84,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'juego_finanzas',
         'USER': 'root',
-        'PASSWORD': '',
+        'PASSWORD': '123456789',
         'HOST': '127.0.0.1',
         'PORT': '3306'
     }

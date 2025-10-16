@@ -16,8 +16,17 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from temas.views import TemaViewSet
 
+# Crear el router y registrar el ViewSet
+router = DefaultRouter()
+router.register(r'temas', TemaViewSet, basename='temas')
+
+# Definir las rutas principales
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('home.urls')),
+    path('api/', include(router.urls)),
 ]
+
+
