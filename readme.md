@@ -67,9 +67,3 @@ Apis creadas
 🧠 **Estructura:** `routes/` + `controllers/` con conexión desde `db.py`
 
 ---
-
-¿Quieres que ahora te genere el archivo `.json` de **Postman Collection** con todos estos endpoints listos para importar y probar directamente (ya con los `body` preconfigurados)?
-Así solo haces:
-
-> 🧠 _“Import → Postman → EduFinanzas API v1.json”_
-> y empiezas a testear de una.
