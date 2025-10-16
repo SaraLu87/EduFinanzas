@@ -42,7 +42,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'solucionarReto',
     'retos',
-    'temas'
+    'temas',
+    'usuarios',
 ]
 
 MIDDLEWARE = [
