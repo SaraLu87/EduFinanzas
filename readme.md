@@ -1,5 +1,4 @@
-Perfecto, Bicho ⚡ — estás en el punto donde ya tienes un **backend sólido y modular**, así que aquí va tu **mapa maestro de rutas (API endpoints)** 🧭
-Te lo dejo clasificado por módulo (`auth`, `perfil`, `temas`, `retos`, `progreso`, `tips`) y por método HTTP (**GET**, **POST**, **PUT**).
+Apis creadas
 
 ---
 
