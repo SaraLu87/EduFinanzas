@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'retos',
     'temas',
     'usuarios',
+    'perfiles',
 ]
 
 MIDDLEWARE = [

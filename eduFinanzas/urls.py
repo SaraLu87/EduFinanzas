@@ -19,11 +19,13 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from temas.views import TemaViewSet
 from usuarios.views import UsuarioViewSet
+from perfiles.views import PerfilViewSet
 
 # Crear el router y registrar el ViewSet
 router = DefaultRouter()
 router.register(r'temas', TemaViewSet, basename='temas')
 router.register(r'usuarios', UsuarioViewSet, basename='usuarios')
+router.register(r'perfiles', PerfilViewSet, basename='perfiles')
 
 # Definir las rutas principales
 urlpatterns = [
