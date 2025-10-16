@@ -3,7 +3,8 @@ from controllers.perfil_controller import (
     obtener_perfil,
     editar_perfil,
     agregar_monedas,
-    actualizar_saldo
+    actualizar_saldo,
+    eliminar_perfil
 )
 
 perfil_bp = Blueprint("perfil_bp", __name__)
@@ -27,3 +28,8 @@ def add_coins():
 @perfil_bp.route("/api/saldo/actualizar", methods=["POST"])
 def update_balance():
     return actualizar_saldo()
+
+# ✅ Eliminar perfil
+@perfil_bp.route("/api/perfil/<int:id_usuario>", methods=["DELETE"])
+def delete_perfil(id_usuario):
+    return eliminar_perfil(id_usuario)

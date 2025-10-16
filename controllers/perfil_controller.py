@@ -31,7 +31,37 @@ def obtener_perfil(id_usuario):
     finally:
         cursor.close()
         conn.close()
+        
+# # ✅ Eliminar perfil con cascada
+# def eliminar_perfil(id_usuario):
+#     conn = get_connection()
+#     cursor = conn.cursor()
 
+#     try:
+#         # Iniciar transacción
+#         cursor.execute("START TRANSACTION")
+
+#         # Eliminar registros relacionados en progreso
+#         cursor.execute("DELETE FROM progreso WHERE id_usuario = %s", (id_usuario,))
+
+#         # Eliminar perfil
+#         cursor.execute("DELETE FROM perfiles WHERE id_usuario = %s", (id_usuario,))
+
+#         # Eliminar usuario
+#         cursor.execute("DELETE FROM usuarios WHERE id_usuario = %s", (id_usuario,))
+
+#         conn.commit()
+
+#         return jsonify({"message": "Perfil y datos asociados eliminados correctamente ✅"}), 200
+
+#     except Exception as e:
+#         conn.rollback()
+#         print("❌ Error al eliminar perfil:", e)
+#         return jsonify({"error": "Error interno al eliminar"}), 500
+
+#     finally:
+#         cursor.close()
+#         conn.close()
 
 # ✅ Editar nombre o correo
 def editar_perfil(id_usuario):
@@ -115,6 +145,37 @@ def actualizar_saldo():
     except Exception as e:
         print("❌ Error al actualizar saldo:", e)
         return jsonify({"error": "Error interno"}), 500
+
+    finally:
+        cursor.close()
+        conn.close()
+
+# ✅ Eliminar perfil con cascada
+def eliminar_perfil(id_usuario):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    try:
+        # Iniciar transacción
+        cursor.execute("START TRANSACTION")
+
+        # Eliminar registros relacionados en progreso
+        cursor.execute("DELETE FROM progreso WHERE id_usuario = %s", (id_usuario,))
+
+        # Eliminar perfil
+        cursor.execute("DELETE FROM perfiles WHERE id_usuario = %s", (id_usuario,))
+
+        # Eliminar usuario
+        cursor.execute("DELETE FROM usuarios WHERE id_usuario = %s", (id_usuario,))
+
+        conn.commit()
+
+        return jsonify({"message": "Perfil y datos asociados eliminados correctamente ✅"}), 200
+
+    except Exception as e:
+        conn.rollback()
+        print("❌ Error al eliminar perfil:", e)
+        return jsonify({"error": "No se pudo eliminar el perfil debido a restricciones de seguridad. "}), 403
 
     finally:
         cursor.close()
