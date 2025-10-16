@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'reste_framework',
     'home',
+    'solucionarReto',
+    'retos',
 ]
 
 MIDDLEWARE = [
