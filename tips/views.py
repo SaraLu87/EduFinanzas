@@ -4,16 +4,15 @@ from .serializers import (
     TipPeriodicaCreateUpdateSerializer,
     TipPeriodicaSerializer
 )
-
 from .services import (
-    tip_crear, tip_ver, tip_listar,
+    tip_crear, tip_listar, tip_ver,
     tip_actualizar, tip_eliminar
 )
 
 
-class TipViewSet(viewsets.ViewSet):
+class TipPeriodicaViewSet(viewsets.ViewSet):
     """
-    Endpoints para gestionar los tips periódicos:
+    Endpoints:
     - GET    /api/tips/        -> list
     - GET    /api/tips/{id}/   -> retrieve
     - POST   /api/tips/        -> create
@@ -22,7 +21,7 @@ class TipViewSet(viewsets.ViewSet):
     """
 
     def list(self, request):
-        """Listar todos los tips"""
+        """Listar todos los tips periódicos"""
         data = tip_listar()
         return Response(data, status=status.HTTP_200_OK)
 
@@ -34,16 +33,16 @@ class TipViewSet(viewsets.ViewSet):
         return Response(item, status=status.HTTP_200_OK)
 
     def create(self, request):
-        """Crear un nuevo tip"""
-        serializer = TipCreateUpdateSerializer(data=request.data)
+        """Crear un nuevo tip periódico"""
+        serializer = TipPeriodicaCreateUpdateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         nuevo_id = tip_crear(**serializer.validated_data)
-        item = tip_ver(nuevo_id) if nuevo_id else None
+        item = tip_ver(nuevo_id)
         return Response(item, status=status.HTTP_201_CREATED)
 
     def update(self, request, pk=None):
         """Actualizar un tip existente"""
-        serializer = TipCreateUpdateSerializer(data=request.data)
+        serializer = TipPeriodicaCreateUpdateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         filas = tip_actualizar(int(pk), **serializer.validated_data)
         if filas == 0:
