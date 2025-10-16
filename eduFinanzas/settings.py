@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'usuarios',
     'perfiles',
     'tips',
+    'progresos',
 ]
 
 MIDDLEWARE = [
