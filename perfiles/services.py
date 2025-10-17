@@ -1,10 +1,10 @@
 from django.db import connection, DatabaseError
 
-def perfil_crear(id_usuario: int, nombre_perfil: str, foto_perfil: str):
+def perfil_crear(id_usuario: int, nombre_perfil: str, foto_perfil: str, tema_actual:int, monedas:int):
     """Crea un nuevo perfil."""
     try:
         with connection.cursor() as cursor:
-            cursor.callproc('perfil_crear', [id_usuario, nombre_perfil, foto_perfil])
+            cursor.callproc('perfil_crear', [id_usuario, nombre_perfil, foto_perfil, tema_actual, monedas])
             row = cursor.fetchone()
             return int(row[0]) if row else None
     except DatabaseError as e:
