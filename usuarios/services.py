@@ -1,4 +1,7 @@
 from django.db import connection, DatabaseError
+from django.contrib.auth.models import User
+
+u = User()
 
 def usuarios_crear(correo: str, contrasena: str, rol: str):
     """
@@ -7,7 +10,9 @@ def usuarios_crear(correo: str, contrasena: str, rol: str):
     """
     try:
         with connection.cursor() as cursor:
-            cursor.callproc('usuarios_crear', [correo, contrasena, rol])
+            u.set_password(contrasena)
+            hash_con = u.password
+            cursor.callproc('usuarios_crear', [correo, hash_con, rol])
             # Puedes devolver el último ID insertado
             cursor.execute("SELECT LAST_INSERT_ID();")
             row = cursor.fetchone()
