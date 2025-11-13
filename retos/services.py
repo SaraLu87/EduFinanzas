@@ -1,13 +1,13 @@
 from django.db import connection, DatabaseError
 
 def retos_crear(tipo_pregunta, nombre_reto, id_tema, descripcion, recompensa_monedas,
-                respuesta_uno, respuesta_dos, respuesta_tres, respuesta_cuatro, respuestaCorrecta):
+                respuesta_uno, respuesta_dos, respuesta_tres, respuesta_cuatro, respuestaCorrecta, costo_monedas):
     try:
         with connection.cursor() as cursor:
             cursor.callproc('retos_crear', [
                 tipo_pregunta, nombre_reto, id_tema, descripcion,
                 recompensa_monedas, respuesta_uno, respuesta_dos,
-                respuesta_tres, respuesta_cuatro, respuestaCorrecta
+                respuesta_tres, respuesta_cuatro, respuestaCorrecta, costo_monedas
             ])
             row = cursor.fetchone()
             return int(row[0]) if row else None
@@ -32,6 +32,7 @@ def reto_ver(id_reto: int):
             "respuesta_tres": row[8],
             "respuesta_cuatro": row[9],
             "respuestaCorrecta": row[10],
+            "costo_monedas": row[11]
         }
 
 def retos_listar():
@@ -51,6 +52,7 @@ def retos_listar():
                 "respuesta_tres": r[8],
                 "respuesta_cuatro": r[9],
                 "respuestaCorrecta": r[10],
+                "costo_monedas": r[11]
             } for r in rows
         ]
 

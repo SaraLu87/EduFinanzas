@@ -12,6 +12,7 @@ class RetoSerializer(serializers.Serializer):
     respuesta_tres = serializers.CharField(allow_blank=True, required=False)
     respuesta_cuatro = serializers.CharField(allow_blank=True, required=False)
     respuestaCorrecta = serializers.CharField(max_length=100)
+    costo_monedas = serializers.IntegerField()
 
 class RetoCreateUpdateSerializer(serializers.Serializer):
     tipo_pregunta = serializers.CharField(max_length=50)
@@ -24,3 +25,4 @@ class RetoCreateUpdateSerializer(serializers.Serializer):
     respuesta_tres = serializers.CharField(allow_blank=True, required=False)
     respuesta_cuatro = serializers.CharField(allow_blank=True, required=False)
     respuestaCorrecta = serializers.CharField(max_length=100)
+    costo_monedas = serializers.IntegerField()

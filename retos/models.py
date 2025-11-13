@@ -12,6 +12,7 @@ class Retos(models.Model):
     respuesta_tres = models.CharField(max_length=100)
     respuesta_cuatro = models.CharField(max_length=100)
     respuestaCorrecta = models.CharField(max_length=100)
+    costo_monedas = models.IntegerField
     
     class Meta:
         managed = False  # Django no manejará esta tabla (ya existe en MySQL)
