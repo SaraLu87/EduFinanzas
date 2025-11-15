@@ -5,6 +5,7 @@ class Temas(models.Model):
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField()
     precio  = models.IntegerField(default=0)
+    # img = models.ImageField(upload_to="temas", null=True, blank=True, default="media/fotorandom")
     
     class Meta:
         managed = False

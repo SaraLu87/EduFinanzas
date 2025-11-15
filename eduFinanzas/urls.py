@@ -24,6 +24,9 @@ from retos.views import RetoViewSet
 from tips.views import TipPeriodicaViewSet
 from progresos.views import ProgresoViewSet
 from solucionarReto.views import SolucionRetoView
+from django.conf import settings
+from django.conf.urls.static import static
+
 
 # Crear el router y registrar el ViewSet
 router = DefaultRouter()
@@ -39,6 +42,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
     path('api/solucionar_reto/', SolucionRetoView.as_view(), name='solucionar_reto'),
-]
+] #+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
 
 
