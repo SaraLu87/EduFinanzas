@@ -1,7 +1,5 @@
 from django.db import models
 
-from django.db import models
-
 class Usuarios(models.Model):
     id_usuario = models.AutoField(primary_key=True)
     correo = models.CharField(max_length=100, unique=True)

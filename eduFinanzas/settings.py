@@ -109,6 +109,9 @@ REST_FRAMEWORK = {
     'DEFAULT_PARSER_CLASSES': ['rest_framework.parsers.JSONParser'],
 }
 
+JWT_SECRET = "luna123"
+JWT_ALGORITHM = "HS256"
+
 # ---- Internationalization ----
 LANGUAGE_CODE = 'es-co'
 TIME_ZONE = 'America/Bogota'

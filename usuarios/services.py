@@ -1,5 +1,9 @@
+import jwt
+from django.conf import settings
 from django.db import connection, DatabaseError
 from django.contrib.auth.models import User
+from .serializers import UsuarioSerializer
+from .models import Usuarios
 
 u = User()
 
@@ -16,7 +20,23 @@ def usuarios_crear(correo: str, contrasena: str, rol: str):
             # Puedes devolver el último ID insertado
             cursor.execute("SELECT LAST_INSERT_ID();")
             row = cursor.fetchone()
-            return int(row[0]) if row else None
+            id_usuario = int(row[0]) if row else None
+        
+        usuario_id = Usuarios.objects.get(id_usuario=id_usuario)
+        payload = {
+            "id_usuario": usuario_id.id_usuario,
+            "correo": usuario_id.correo
+            # Sin expiración
+        }
+
+        token = jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
+
+        serializer = UsuarioSerializer(usuario_id)
+        
+        return {
+            "token": token,
+            "usuario": serializer.data 
+        }
     except DatabaseError as e:
         raise
 

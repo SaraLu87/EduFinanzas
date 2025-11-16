@@ -32,7 +32,8 @@ class UsuarioViewSet(viewsets.ViewSet):
     def create(self, request):
         serializer = UsuarioCreateUpdateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        nuevo_id = usuarios_crear(**serializer.validated_data)
+        nuevo = usuarios_crear(**serializer.validated_data)
+        nuevo_id = nuevo["usuario"]["id_usuario"]
         item = usuario_ver(nuevo_id)
         return Response(item, status=status.HTTP_201_CREATED)
 
