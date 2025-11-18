@@ -59,6 +59,9 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     "corsheaders.middleware.CorsMiddleware",
+    
+    #"usuarios.middleware.AuthMiddleware",
+    
 ]
 
 ROOT_URLCONF = 'eduFinanzas.urls'
@@ -107,6 +110,8 @@ DATABASES = {
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': ['rest_framework.renderers.JSONRenderer'],
     'DEFAULT_PARSER_CLASSES': ['rest_framework.parsers.JSONParser'],
+    'UNAUTHENTICATED_USER': None,
+    'DEFAULT_AUTHENTICATION_CLASSES': ["usuarios.authentication.JWTAuthentication",],
 }
 
 JWT_SECRET = "luna123"

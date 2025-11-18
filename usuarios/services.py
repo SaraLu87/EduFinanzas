@@ -2,6 +2,7 @@ import jwt
 from django.conf import settings
 from django.db import connection, DatabaseError
 from django.contrib.auth.models import User
+from django.contrib.auth.hashers import check_password
 from .serializers import UsuarioSerializer
 from .models import Usuarios
 
@@ -20,23 +21,22 @@ def usuarios_crear(correo: str, contrasena: str, rol: str):
             # Puedes devolver el último ID insertado
             cursor.execute("SELECT LAST_INSERT_ID();")
             row = cursor.fetchone()
-            id_usuario = int(row[0]) if row else None
+            return int(row[0]) if row else None
         
-        usuario_id = Usuarios.objects.get(id_usuario=id_usuario)
-        payload = {
-            "id_usuario": usuario_id.id_usuario,
-            "correo": usuario_id.correo
-            # Sin expiración
-        }
+        # usuario_id = Usuarios.objects.get(id_usuario=id_usuario)
+        # payload = {
+        #     "id_usuario": usuario_id.id_usuario,
+        #     "correo": usuario_id.correo
+        # }
 
-        token = jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
+        # token = jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
 
-        serializer = UsuarioSerializer(usuario_id)
+        # serializer = UsuarioSerializer(usuario_id)
         
-        return {
-            "token": token,
-            "usuario": serializer.data 
-        }
+        # return {
+        #     "token": token,
+        #     "usuario": serializer.data 
+        # }
     except DatabaseError as e:
         raise
 
@@ -50,13 +50,16 @@ def usuario_ver(id_usuario: int):
         row = cursor.fetchone()
         if not row:
             return None
-        return {
-            "id_usuario": row[0],
-            "correo": row[1],
-            "rol": row[2],
-            "fecha_registro": row[3],
-        }
+        
+        usuario = Usuarios(
+            id_usuario=row[0],
+            correo=row[1],
+            rol=row[2],
+            fecha_registro=row[3],
+        )
 
+        usuario.is_authenticated = True
+        return usuario
 
 def usuarios_listar():
     """
@@ -95,3 +98,41 @@ def usuarios_eliminar(id_usuario: int) -> int:
         cursor.execute("SELECT ROW_COUNT();")
         row = cursor.fetchone()
         return int(row[0]) if row else 0
+    
+def login_usuario(correo: str, contrasena: str):
+    """
+    Inicia sesión y genera un token para un usuario existente.
+    """
+    with connection.cursor() as cursor:
+        cursor.callproc('usuarios_logear', [correo])
+        row = cursor.fetchone()
+
+        if not row:
+            return None  # Usuario no encontrado
+
+        # Supongamos que el SP retorna: id, correo, password_hash, rol
+        id_usuario = row[0]
+        correo = row[1]
+        hash_guardado = row[2]
+        rol = row[3]
+
+        # Validar contraseña
+        if not check_password(contrasena, hash_guardado):
+            return False  # Contraseña incorrecta
+
+        # Generar token
+        payload = {
+            "id_usuario": id_usuario,
+            "correo": correo
+        }
+
+        token = jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
+
+        return {
+            "token": token,
+            "usuario": {
+                "id_usuario": id_usuario,
+                "correo": correo,
+                "rol": rol
+            }
+        }
