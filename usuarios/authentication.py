@@ -36,5 +36,4 @@ class JWTAuthentication(BaseAuthentication):
         # DRF espera (user, auth)
         # user → objeto que represente al usuario
         # auth → el token o payload
-        print(usuario, payload, "  LUNA")
         return usuario, payload

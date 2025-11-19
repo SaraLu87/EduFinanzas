@@ -1,14 +1,25 @@
 from django.db import connection, DatabaseError
 
-def retos_crear(tipo_pregunta, nombre_reto, id_tema, descripcion, recompensa_monedas,
-                respuesta_uno, respuesta_dos, respuesta_tres, respuesta_cuatro, respuestaCorrecta, costo_monedas):
+def retos_crear(nombre_reto, id_tema, descripcion, pregunta, img_reto,
+                recompensa_monedas, costo_monedas,
+                respuesta_uno, respuesta_dos, respuesta_tres,
+                respuesta_cuatro, respuestaCorrecta):
     try:
         with connection.cursor() as cursor:
             cursor.callproc('retos_crear', [
-                tipo_pregunta, nombre_reto, id_tema, descripcion,
-                recompensa_monedas, respuesta_uno, respuesta_dos,
-                respuesta_tres, respuesta_cuatro, respuestaCorrecta, costo_monedas
-            ])
+                nombre_reto,
+                id_tema,
+                descripcion,
+                pregunta,
+                img_reto,
+                recompensa_monedas,
+                costo_monedas,
+                respuesta_uno,
+                respuesta_dos,
+                respuesta_tres,
+                respuesta_cuatro,
+                respuestaCorrecta
+                ])
             row = cursor.fetchone()
             return int(row[0]) if row else None
     except DatabaseError as e:
@@ -22,17 +33,18 @@ def reto_ver(id_reto: int):
             return None
         return {
             "id_reto": row[0],
-            "tipo_pregunta": row[1],
-            "nombre_reto": row[2],
-            "id_tema": row[3],
-            "descripcion": row[4],
-            "recompensa_monedas": row[5],
-            "respuesta_uno": row[6],
-            "respuesta_dos": row[7],
-            "respuesta_tres": row[8],
-            "respuesta_cuatro": row[9],
-            "respuestaCorrecta": row[10],
-            "costo_monedas": row[11]
+            "nombre_reto": row[1],
+            "id_tema": row[2],
+            "descripcion": row[3],
+            "pregunta": row[4],
+            "img_reto": row[5],
+            "recompensa_monedas": row[6],
+            "costo_monedas": row[7],
+            "respuesta_uno": row[8],
+            "respuesta_dos": row[9],
+            "respuesta_tres": row[10],
+            "respuesta_cuatro": row[11],
+            "respuestaCorrecta": row[12]
         }
 
 def retos_listar():
@@ -42,29 +54,42 @@ def retos_listar():
         return [
             {
                 "id_reto": r[0],
-                "tipo_pregunta": r[1],
-                "nombre_reto": r[2],
-                "id_tema": r[3],
-                "descripcion": r[4],
-                "recompensa_monedas": r[5],
-                "respuesta_uno": r[6],
-                "respuesta_dos": r[7],
-                "respuesta_tres": r[8],
-                "respuesta_cuatro": r[9],
-                "respuestaCorrecta": r[10],
-                "costo_monedas": r[11]
+                "nombre_reto": r[1],
+                "id_tema": r[2],
+                "descripcion": r[3],
+                "pregunta": r[4],
+                "img_reto": r[5],
+                "recompensa_monedas": r[6],
+                "costo_monedas": r[7],
+                "respuesta_uno": r[8],
+                "respuesta_dos": r[9],
+                "respuesta_tres": r[10],
+                "respuesta_cuatro": r[11],
+                "respuestaCorrecta": r[12]
             } for r in rows
         ]
 
-def retos_actualizar(id_reto, tipo_pregunta, nombre_reto, id_tema, descripcion,
-                     recompensa_monedas, respuesta_uno, respuesta_dos,
-                     respuesta_tres, respuesta_cuatro, respuestaCorrecta) -> int:
+def retos_actualizar(id_reto, nombre_reto, id_tema, descripcion, pregunta, img_reto,
+                     recompensa_monedas, costo_monedas,
+                     respuesta_uno, respuesta_dos,
+                     respuesta_tres, respuesta_cuatro,
+                     respuestaCorrecta) -> int:
     with connection.cursor() as cursor:
         cursor.callproc('retos_actualizar', [
-            id_reto, tipo_pregunta, nombre_reto, id_tema, descripcion,
-            recompensa_monedas, respuesta_uno, respuesta_dos,
-            respuesta_tres, respuesta_cuatro, respuestaCorrecta
-        ])
+            id_reto,
+            nombre_reto,
+            id_tema,
+            descripcion,
+            pregunta,
+            img_reto,
+            recompensa_monedas,
+            costo_monedas,
+            respuesta_uno,
+            respuesta_dos,
+            respuesta_tres,
+            respuesta_cuatro,
+            respuestaCorrecta
+            ])
         row = cursor.fetchone()
         return int(row[0]) if row else 0
 

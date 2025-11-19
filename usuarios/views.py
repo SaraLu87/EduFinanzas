@@ -22,15 +22,15 @@ class UsuarioViewSet(viewsets.ViewSet):
     """
     permission_classes = [permisosUsuarios]
     
-    def get_permissions(self):
-        """
-        Retorna los permisos dinámicamente según la acción.
-        """
-        if self.action == "list":  # Solo para el método list
-            permission_classes = [permisosAdministrador]
-        else:
-            permission_classes = self.permission_classes
-        return [perm() for perm in permission_classes]
+    # def get_permissions(self):
+    #     """
+    #     Retorna los permisos dinámicamente según la acción.
+    #     """
+    #     if self.action == "list":  # Solo para el método list
+    #         permission_classes = [permisosAdministrador]
+    #     else:
+    #         permission_classes = self.permission_classes
+    #     return [perm() for perm in permission_classes]
     
     
     def list(self, request):

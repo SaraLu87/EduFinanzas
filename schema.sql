@@ -1,8 +1,7 @@
 CREATE DATABASE juego_finanzas;
--- DROP DATABASE juego_finanzas;
 USE juego_finanzas;
 
--- =====================================
+
 CREATE TABLE usuarios (
   id_usuario INT AUTO_INCREMENT PRIMARY KEY,
   correo VARCHAR(100) NOT NULL UNIQUE,
@@ -11,38 +10,48 @@ CREATE TABLE usuarios (
   fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- =====================================
+-- =============== TABLA TEMAS =========
+-- =====================================
 CREATE TABLE temas(
   id_tema INT AUTO_INCREMENT PRIMARY KEY,
   nombre VARCHAR(100),
   descripcion TEXT,
-  precio int default 0
+  img_tema VARCHAR(255) DEFAULT 'default_tema.png',
+  informacion_tema TEXT
 );
+
 
 CREATE TABLE perfiles (
   id_perfil INT AUTO_INCREMENT PRIMARY KEY,
   id_usuario INT,
   nombre_perfil VARCHAR(50) NOT NULL UNIQUE,
+  edad INT,
   foto_perfil VARCHAR(255) DEFAULT 'default.png',
-  tema_actual INT DEFAULT 1,
   monedas INT DEFAULT 0,
   FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario) ON DELETE CASCADE
 );
 
 CREATE TABLE retos (
   id_reto INT AUTO_INCREMENT PRIMARY KEY,
-  tipo_pregunta varchar(50),
   nombre_reto VARCHAR(100),
-  id_tema int,
+  id_tema INT,
   descripcion TEXT,
+  pregunta TEXT,
+  img_reto VARCHAR(255) DEFAULT "default_reto.png",
   recompensa_monedas INT DEFAULT 0,
+  costo_monedas INT DEFAULT 0,
   respuesta_uno VARCHAR(100),
   respuesta_dos VARCHAR(100),
   respuesta_tres VARCHAR(100),
   respuesta_cuatro VARCHAR(100),
   respuestaCorrecta VARCHAR(100),
-  foreign key (id_tema) references temas(id_tema)
+  FOREIGN KEY (id_tema) REFERENCES temas(id_tema)
 );
 
+-- =====================================
+-- ============== TABLA PROGRESO =======
+-- =====================================
 CREATE TABLE progreso (
   id_progreso INT AUTO_INCREMENT PRIMARY KEY,
   id_perfil INT,
@@ -63,14 +72,12 @@ CREATE TABLE tips_periodicas (
   FOREIGN KEY (id_perfil) REFERENCES perfiles(id_perfil)
 );
 
--- ................................. vistas ................................................
--- vista para ver la informacion retos y a que temas estan asociaddos
+-- --------------------- vistas --------------------------
 CREATE OR REPLACE VIEW vista_retos_temas AS
 SELECT
     r.id_reto,
-    r.nombre_reto,
-    r.tipo_pregunta,
     r.descripcion AS descripcion_reto,
+    r.pregunta,
     r.recompensa_monedas,
     r.respuesta_uno,
     r.respuesta_dos,
@@ -83,24 +90,8 @@ SELECT
 FROM retos r
 INNER JOIN temas t ON r.id_tema = t.id_tema
 ORDER BY r.id_reto DESC;
+SELECT * FROM vista_retos_temas;
 
--- Vista para ver usuario y reto en el que se encuentra
--- CREATE OR REPLACE VIEW vista_progreso_detallado AS
--- SELECT
---     p.id_progreso,
---     per.id_perfil,
---     per.nombre_perfil,
---     r.id_reto,
---     r.nombre_reto,
---     p.completado,
---     p.fecha_completado
--- FROM progreso p
--- INNER JOIN perfiles per ON p.id_perfil = per.id_perfil
--- INNER JOIN retos r ON p.id_reto = r.id_reto
--- ORDER BY p.id_progreso DESC;
-
-
--- Vista para ver solo retos completados para el progreso del usuario
 CREATE OR REPLACE VIEW vista_progreso_completado AS
 SELECT
     p.id_progreso,
@@ -112,20 +103,19 @@ INNER JOIN perfiles per ON p.id_perfil = per.id_perfil
 INNER JOIN retos r ON p.id_reto = r.id_reto
 WHERE p.completado = TRUE
 ORDER BY p.fecha_completado DESC;
+SELECT * FROM vista_progreso_completado;
 
--- vista para ver al usuario con la informacion correspondiente de su perfil y saber en que tema se encuentra
 CREATE OR REPLACE VIEW vista_resumen_perfiles AS
 SELECT
     p.id_perfil,
     p.nombre_perfil,
     u.correo AS usuario_correo,
-    p.monedas,
-    p.tema_actual
+    p.monedas
 FROM perfiles p
 INNER JOIN usuarios u ON p.id_usuario = u.id_usuario
 ORDER BY p.monedas DESC;
+SELECT * FROM vista_resumen_perfiles;
 
--- vista para el perfil del administrador
 CREATE OR REPLACE VIEW vista_administradores_perfiles AS
 SELECT
     u.id_usuario,
@@ -137,6 +127,7 @@ FROM usuarios u
 INNER JOIN perfiles p ON u.id_usuario = p.id_usuario
 WHERE u.rol = 'Administrador'
 ORDER BY u.id_usuario;
+SELECT * FROM vista_administradores_perfiles;
 
 CREATE OR REPLACE VIEW vista_usuarios_perfiles AS
 SELECT
@@ -149,6 +140,7 @@ FROM usuarios u
 INNER JOIN perfiles p ON u.id_usuario = p.id_usuario
 WHERE u.rol = 'Usuario'
 ORDER BY u.id_usuario;
+SELECT * FROM vista_usuarios_perfiles;
 
 -- ------------------------------- Procedimientos -----------------------------------------------
 DELIMITER $$
@@ -158,10 +150,11 @@ DROP PROCEDURE IF EXISTS temas_crear $$
 CREATE PROCEDURE temas_crear(
   IN p_nombre VARCHAR(100),
   IN p_descripcion TEXT,
-  IN p_precio INT
+  IN p_img_tema varchar(255),
+  IN p_informacion TEXT
 )
 BEGIN
-  INSERT INTO temas(nombre, descripción, precio) VALUES (p_nombre, p_descripción, p_precio);
+  INSERT INTO temas(nombre, descripcion, img_tema, informacion_tema) VALUES (p_nombre, p_descripcion, p_img_tema, p_informacion);
   SELECT LAST_INSERT_ID() AS id_usuario;
 END $$
 
@@ -184,10 +177,12 @@ DROP PROCEDURE IF EXISTS temas_actualizar $$
 CREATE PROCEDURE temas_actualizar(
 IN p_id INT,
     IN p_nombre VARCHAR(100),
-    IN p_descripcion TEXT
+    IN p_descripcion TEXT,
+    IN p_img_tema varchar(255),
+    IN p_informacion TEXT
 )
 BEGIN
-    UPDATE temas SET nombre = p_nombre, descripcion = p_descripcion WHERE id_tema = p_id;
+    UPDATE temas SET nombre = p_nombre, descripcion = p_descripcion, img_tema = p_img_tema, informacion_tema = p_informacion WHERE id_tema = p_id;
     SELECT ROW_COUNT() AS filas;
 END $$
 
@@ -199,16 +194,17 @@ DELETE FROM temas WHERE id_tema = p_id;
     SELECT ROW_COUNT() AS filas;
 END $$
 
-
 -- ........................................ tabla retos ........................................
 -- CREATE
 DROP PROCEDURE IF EXISTS retos_crear $$
 CREATE PROCEDURE retos_crear(
-  IN p_tipo_pregunta VARCHAR(50),
   IN p_nombre_reto VARCHAR(100),
   IN p_id_tema INT,
   IN p_descripcion TEXT,
+  IN p_pregunta TEXT,
+  IN p_img_reto VARCHAR(255),
   IN p_recompensa_monedas INT,
+  IN p_costo_monedas INT,
   IN p_respuesta_uno VARCHAR(100),
   IN p_respuesta_dos VARCHAR(100),
   IN p_respuesta_tres VARCHAR(100),
@@ -217,13 +213,13 @@ CREATE PROCEDURE retos_crear(
 )
 BEGIN
   INSERT INTO retos (
-    tipo_pregunta, nombre_reto, id_tema, descripcion,
-    recompensa_monedas, respuesta_uno, respuesta_dos,
+    nombre_reto, id_tema, descripcion, pregunta, img_reto,
+    recompensa_monedas, costo_monedas ,respuesta_uno, respuesta_dos,
     respuesta_tres, respuesta_cuatro, respuestaCorrecta
   )
   VALUES (
-    p_tipo_pregunta, p_nombre_reto, p_id_tema, p_descripcion,
-    p_recompensa_monedas, p_respuesta_uno, p_respuesta_dos,
+	p_nombre_reto, p_id_tema, p_descripcion, p_pregunta, p_img_reto,
+    p_recompensa_monedas, p_costo_monedas, p_respuesta_uno, p_respuesta_dos,
     p_respuesta_tres, p_respuesta_cuatro, p_respuestaCorrecta
   );
 
@@ -252,11 +248,13 @@ END $$
 DROP PROCEDURE IF EXISTS retos_actualizar $$
 CREATE PROCEDURE retos_actualizar(
   IN p_id INT,
-  IN p_tipo_pregunta VARCHAR(50),
   IN p_nombre_reto VARCHAR(100),
   IN p_id_tema INT,
   IN p_descripcion TEXT,
+  IN p_pregunta TEXT,
+  IN p_img_reto VARCHAR(255),
   IN p_recompensa_monedas INT,
+  IN p_costo_monedas INT,
   IN p_respuesta_uno VARCHAR(100),
   IN p_respuesta_dos VARCHAR(100),
   IN p_respuesta_tres VARCHAR(100),
@@ -266,11 +264,13 @@ CREATE PROCEDURE retos_actualizar(
 BEGIN
   UPDATE retos
   SET
-    tipo_pregunta = p_tipo_pregunta,
     nombre_reto = p_nombre_reto,
     id_tema = p_id_tema,
     descripcion = p_descripcion,
+    pregunta = p_pregunta,
+    img_reto = p_img_reto,
     recompensa_monedas = p_recompensa_monedas,
+    costo_monedas = p_costo_monedas,
     respuesta_uno = p_respuesta_uno,
     respuesta_dos = p_respuesta_dos,
     respuesta_tres = p_respuesta_tres,
@@ -288,7 +288,6 @@ BEGIN
   DELETE FROM retos WHERE id_reto = p_id;
   SELECT ROW_COUNT() AS filas;
 END $$
-
 
 -- ........................................... tabla Progreso ......................................
 -- CREATE
@@ -352,7 +351,6 @@ BEGIN
   SELECT ROW_COUNT() AS filas;
 END $$
 
-
 -- ............................................ tabla usuarios .......................................
 -- CREATE
 DROP PROCEDURE IF EXISTS usuarios_crear $$
@@ -372,6 +370,13 @@ CREATE PROCEDURE usuarios_listar()
 BEGIN
     SELECT id_usuario, correo, rol, fecha_registro
     FROM usuarios;
+END $$
+
+DROP PROCEDURE IF EXISTS usuarios_logear $$
+CREATE PROCEDURE usuarios_logear(IN p_correo varchar(100))
+BEGIN
+    SELECT id_usuario, correo, contrasena, rol
+    FROM usuarios WHERE correo = p_correo;
 END $$
 
 -- READ
@@ -406,7 +411,6 @@ BEGIN
     DELETE FROM usuarios WHERE id_usuario = p_id;
 END $$
 
-
 -- .................................................... tabla perfiles .............................................
 
 -- CREATE
@@ -414,20 +418,21 @@ DROP PROCEDURE IF EXISTS perfil_crear $$
 CREATE PROCEDURE perfil_crear(
     IN p_id_usuario INT,
     IN p_nombre_perfil VARCHAR(50),
+    IN p_edad INT,
     IN p_foto_perfil VARCHAR(255)
 )
 BEGIN
-    INSERT INTO perfiles (id_usuario, nombre_perfil, foto_perfil)
-    VALUES (p_id_usuario, p_nombre_perfil, p_foto_perfil);
+    INSERT INTO perfiles (id_usuario, nombre_perfil, edad ,foto_perfil)
+    VALUES (p_id_usuario, p_nombre_perfil, p_edad ,p_foto_perfil);
 END $$
 
 -- LIST(TODOS)
 DROP PROCEDURE IF EXISTS perfil_listar $$
 CREATE PROCEDURE perfil_listar()
 BEGIN
-    SELECT p.id_perfil, u.correo, p.nombre_perfil, p.monedas
-    FROM perfiles p
-    JOIN usuarios u ON p.id_usuario = u.id_usuario;
+    SELECT *
+  FROM perfiles
+  ORDER BY id_perfil DESC;
 END $$
 
 -- READ
@@ -443,15 +448,13 @@ CREATE PROCEDURE perfil_actualizar(
     IN p_id_perfil INT,
     IN p_nombre_perfil VARCHAR(50),
     IN p_foto_perfil VARCHAR(255),
-    IN p_tema_actual INT,
-    IN p_monedas INT
+    IN p_edad INT
 )
 BEGIN
     UPDATE perfiles
     SET nombre_perfil = p_nombre_perfil,
         foto_perfil = p_foto_perfil,
-        tema_actual = p_tema_actual,
-        monedas = p_monedas
+        edad = p_edad
     WHERE id_perfil = p_id_perfil;
 END $$
 
@@ -461,8 +464,6 @@ CREATE PROCEDURE perfil_eliminar(IN p_id INT)
 BEGIN
     DELETE FROM perfiles WHERE id_perfil = p_id;
 END $$
-
-
 
 -- ............................................. procedimientos para tips_periodicos ....................................
 -- CREATE
@@ -535,15 +536,8 @@ BEGIN
  
     if v_respuesta = p_respuesta_seleccionada then
 		set v_completado = TRUE, v_fecha_completado = NOW();
-        if v_progreso_existente = 0 then
-			INSERT INTO progreso (id_perfil, id_reto, completado, fecha_completado, respuesta_seleccionada) VALUES (p_id_perfil, p_id_reto, v_completado, v_fecha_completado, p_respuesta_seleccionada);
-            update perfiles set monedas = (monedas + v_monedas) where id_perfil = p_id_perfil;
-            SELECT LAST_INSERT_ID() AS id_progreso;
-		else
-			update progreso set completado = v_completado, fecha_completado = v_fecha_completado, respuesta_seleccionada = p_respuesta_seleccionada where id_perfil = p_id_perfil and id_reto = p_id_reto;
-            update perfiles set monedas = (monedas + v_monedas) where id_perfil = p_id_perfil;
-            SELECT * from progreso where id_perfil = p_id_perfil and id_reto = p_id_reto;
-		end if;
+		update progreso set completado = v_completado, fecha_completado = v_fecha_completado, respuesta_seleccionada = p_respuesta_seleccionada where id_perfil = p_id_perfil and id_reto = p_id_reto;
+		SELECT * from progreso where id_perfil = p_id_perfil and id_reto = p_id_reto;
 	end if;
 END $$
 
@@ -556,98 +550,65 @@ BEGIN
   inner join perfiles per on per.id_perfil = p.id_perfil
   WHERE p.id_perfil = p_id;
 END $$
+DELIMITER $$
+-- ----------------------------------------------------------------
+
 
 
 DELIMITER $$
--- =============================================================================
 
--- -- CREATE
--- CALL temas_crear('Educación Financiera', 'Aprende sobre ahorro, presupuesto y finanzas personales.');
--- CALL temas_crear('Inversión Básica', 'Conceptos fundamentales de inversión.');
--- -- READ (UNO)
--- CALL tema_ver(1);
--- -- LIST (TODOS)
--- CALL temas_listar();
--- -- UPDATE
--- CALL temas_actualizar(1, 'Ahorro Inteligente', 'Consejos prácticos para ahorrar mejor.');
--- -- DELETE
--- CALL temas_eliminar(2);
+DROP TRIGGER IF EXISTS trg_restar_monedas_comprar_reto $$
+CREATE TRIGGER trg_restar_monedas_al_jugar_reto
+BEFORE INSERT ON progreso
+FOR EACH ROW
+BEGIN
+  DECLARE v_costo INT DEFAULT 0;
+  DECLARE v_monedas_actuales INT DEFAULT 0;
 
+  -- Obtener el costo del reto
+  SELECT costo_monedas INTO v_costo
+  FROM retos
+  WHERE id_reto = new.id_reto;
 
--- CREATE
--- CALL retos_crear('Selección múltiple','Reto de Ahorro',1,'Selecciona el mejor hábito financiero.',50,
--- 	'Ahorrar 10% del salario','Gastar todo','No llevar presupuesto','Endeudarse','1');
--- -- READ (UNO)
--- CALL reto_ver(1);
--- -- LIST (TODOS)
--- CALL retos_listar();
--- -- UPDATE
--- CALL retos_actualizar(1,'Selección múltiple','Reto de Ahorro Actualizado',1,'Reto mejorado sobre hábitos financieros',75,
--- 	'Ahorrar 15%','No gastar más de lo que ganas','Usar tarjeta de crédito sin control','Ignorar gastos','2');
--- -- DELETE
--- CALL retos_eliminar(3);
+  -- Obtener las monedas del perfil
+  SELECT monedas INTO v_monedas_actuales
+  FROM perfiles
+  WHERE id_perfil = new.id_perfil;
 
+  -- Verificar si tiene suficientes monedas
+  IF v_monedas_actuales < v_costo THEN
+    SIGNAL SQLSTATE "45000"
+    SET MESSAGE_TEXT = "No tienes suficientes monedas para comprar este reto.";
+  ELSE
+    -- Restar el costo directamente antes de insertar el progreso
+    UPDATE perfiles
+    SET monedas = monedas - v_costo
+    WHERE id_perfil = new.id_perfil;
+  END IF;
+END $$
 
--- CREATE
--- CALL progresos_crear(1, 1, TRUE, NOW());
--- CALL progresos_crear(1, 2, FALSE, NULL);
--- -- READ (UNO)
--- CALL progreso_ver(2);
--- -- LIST (TODOS)
--- CALL progresos_listar();
--- CALL solucionar_reto(1,2,'Ahorrar primero y gastar después');
--- CALL informacion_retos_solucionados(1);
--- -- UPDATE
--- CALL progresos_actualizar(1, 1, 1, TRUE, NOW());
--- -- DELETE
--- CALL progresos_eliminar(2);
+DELIMITER ;
 
+ DELIMITER $$
 
--- CREATE
--- CALL usuarios_crear('juan.perez@correo.com', 'clave123', 'Usuario');
--- CALL usuarios_crear('admin@gym.com', 'admin123', 'Administrador');
--- -- READ (UNO)
--- CALL usuario_ver(1);
--- -- LIST (TODOS)
--- CALL usuarios_listar();
--- -- UPDATE
--- CALL usuarios_actualizar(1, 'juan.perez@correo.com', 'nuevaClave456', 'Usuario');
--- -- DELETE
--- CALL usuarios_eliminar(3);
+DROP TRIGGER IF EXISTS trg_sumar_monedas_comprar_reto $$
+CREATE TRIGGER trg_sumar_monedas_al_completar_reto
+AFTER INSERT ON progreso
+FOR EACH ROW
+BEGIN
+  DECLARE v_recompensa INT DEFAULT 0;
 
+  -- Si el reto se completo correctamente
+  IF NEW.completado = TRUE THEN
+    SELECT recompensa_monedas INTO v_recompensa
+    FROM retos
+    WHERE id_reto = NEW.id_reto;
 
--- CREATE
--- CALL perfil_crear(1, 'PerfilJuan', 'juan.png');
--- CALL perfil_crear(2, 'PerfilAdmin', 'admin.png');
--- -- READ (UNO)
--- CALL perfil_ver(1);
--- -- LIST (TODOS)
--- CALL perfil_listar();
--- -- UPDATE
--- CALL perfil_actualizar(1, 'PerfilJuanActualizado', 'juan_new.png', 2, 500);
--- -- DELETE
--- CALL perfil_eliminar(3);
+    UPDATE perfiles
+    SET monedas = monedas + v_recompensa
+    WHERE id_perfil = NEW.id_perfil;
+  END IF;
+END $$
 
+DELIMITER ;
 
--- CREATE
--- CALL tip_crear(1, 'Tip de ahorro', 'Aparta el 10% de tus ingresos mensualmente.');
--- CALL tip_crear(2, 'Tip de inversión', 'Invierte en productos con bajo riesgo al inicio.');
--- -- READ (UNO)
--- CALL tip_ver(1);
--- -- LIST (TODOS)
--- CALL tip_listar();
--- -- UPDATE
--- CALL tip_actualizar(1, 'Tip de ahorro actualizado', 'Automatiza tus ahorros para hacerlo más fácil.');
--- -- DELETE
--- CALL tip_eliminar(2);
-
-
--- ===============================================================
--- LLAMADOS A VISTAS
-
-
--- SELECT * FROM vista_retos_temas;
--- SELECT * FROM vista_usuarios_perfiles;
--- SELECT * FROM vista_progreso_completado;
--- SELECT * FROM vista_resumen_perfiles;
--- SELECT * FROM vista_administradores_perfiles;
