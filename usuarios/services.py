@@ -102,6 +102,7 @@ def usuarios_eliminar(id_usuario: int) -> int:
 def login_usuario(correo: str, contrasena: str):
     """
     Inicia sesión y genera un token para un usuario existente.
+    Retorna token, datos del usuario y datos del perfil asociado.
     """
     with connection.cursor() as cursor:
         cursor.callproc('usuarios_logear', [correo])
@@ -120,6 +121,25 @@ def login_usuario(correo: str, contrasena: str):
         if not check_password(contrasena, hash_guardado):
             return False  # Contraseña incorrecta
 
+        # Obtener datos del perfil asociado
+        cursor.execute("""
+            SELECT id_perfil, nombre_perfil, edad, foto_perfil, monedas
+            FROM perfiles
+            WHERE id_usuario = %s
+            LIMIT 1
+        """, [id_usuario])
+        perfil_row = cursor.fetchone()
+
+        perfil_data = None
+        if perfil_row:
+            perfil_data = {
+                "id_perfil": perfil_row[0],
+                "nombre_perfil": perfil_row[1],
+                "edad": perfil_row[2],
+                "foto_perfil": perfil_row[3],
+                "monedas": perfil_row[4]
+            }
+
         # Generar token
         payload = {
             "id_usuario": id_usuario,
@@ -134,5 +154,6 @@ def login_usuario(correo: str, contrasena: str):
                 "id_usuario": id_usuario,
                 "correo": correo,
                 "rol": rol
-            }
+            },
+            "perfil": perfil_data
         }

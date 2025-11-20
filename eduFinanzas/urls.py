@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from temas.views import TemaViewSet
-from usuarios.views import UsuarioViewSet, LoginView
+from usuarios.views import UsuarioViewSet, LoginView, RegisterView
 from perfiles.views import PerfilViewSet
 from retos.views import RetoViewSet
 from tips.views import TipPeriodicaViewSet
@@ -43,7 +43,31 @@ urlpatterns = [
     path('api/', include(router.urls)),
     path('api/solucionar_reto/', SolucionRetoView.as_view(), name='solucionar_reto'),
     path('api/login_usuario/', LoginView.as_view(), name='login_usuario'),
-] #+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    path('api/register/', RegisterView.as_view(), name='register'),  # Endpoint de registro público
+]
+
+# ============================================================================
+# CONFIGURACIÓN PARA SERVIR ARCHIVOS MEDIA (IMÁGENES) EN DESARROLLO
+# ============================================================================
+# Pillow procesa y guarda las imágenes en MEDIA_ROOT (configurado en settings.py)
+# Esta configuración permite acceder a las imágenes a través de MEDIA_URL
+#
+# Ejemplo de uso:
+#   - MEDIA_ROOT = BASE_DIR / 'mediafiles'  (donde se guardan físicamente)
+#   - MEDIA_URL = 'media/'                   (URL para acceder)
+#   - Imagen guardada en: /mediafiles/perfiles/foto.jpg
+#   - URL de acceso: http://localhost:8000/media/perfiles/foto.jpg
+#
+# Las carpetas donde se guardan las imágenes son:
+#   - /mediafiles/perfiles/   → Fotos de perfil de usuarios
+#   - /mediafiles/temas/      → Imágenes de temas educativos
+#   - /mediafiles/retos/      → Imágenes de retos/desafíos
+#
+# IMPORTANTE: En producción, usar un servidor web (Nginx/Apache) para servir
+# archivos estáticos en lugar de Django, por razones de rendimiento y seguridad.
+# ============================================================================
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
 
