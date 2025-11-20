@@ -1,9 +1,15 @@
 from django.db import connection, DatabaseError
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+import os
 
-def retos_crear(nombre_reto, id_tema, descripcion, pregunta, img_reto,
-                recompensa_monedas, costo_monedas,
-                respuesta_uno, respuesta_dos, respuesta_tres,
-                respuesta_cuatro, respuestaCorrecta):
+def retos_crear(nombre_reto, id_tema, descripcion, pregunta, img_reto=None,
+                recompensa_monedas=10, costo_monedas=5,
+                respuesta_uno='', respuesta_dos='', respuesta_tres='',
+                respuesta_cuatro='', respuestaCorrecta=''):
+    """
+    Crea un nuevo reto. img_reto es opcional.
+    """
     try:
         with connection.cursor() as cursor:
             cursor.callproc('retos_crear', [
@@ -19,11 +25,12 @@ def retos_crear(nombre_reto, id_tema, descripcion, pregunta, img_reto,
                 respuesta_tres,
                 respuesta_cuatro,
                 respuestaCorrecta
-                ])
+            ])
             row = cursor.fetchone()
             return int(row[0]) if row else None
     except DatabaseError as e:
         raise
+
 
 def reto_ver(id_reto: int):
     with connection.cursor() as cursor:
@@ -47,6 +54,7 @@ def reto_ver(id_reto: int):
             "respuestaCorrecta": row[12]
         }
 
+
 def retos_listar():
     with connection.cursor() as cursor:
         cursor.callproc('retos_listar')
@@ -69,29 +77,37 @@ def retos_listar():
             } for r in rows
         ]
 
-def retos_actualizar(id_reto, nombre_reto, id_tema, descripcion, pregunta, img_reto,
-                     recompensa_monedas, costo_monedas,
-                     respuesta_uno, respuesta_dos,
-                     respuesta_tres, respuesta_cuatro,
-                     respuestaCorrecta) -> int:
-    with connection.cursor() as cursor:
-        cursor.callproc('retos_actualizar', [
-            id_reto,
-            nombre_reto,
-            id_tema,
-            descripcion,
-            pregunta,
-            img_reto,
-            recompensa_monedas,
-            costo_monedas,
-            respuesta_uno,
-            respuesta_dos,
-            respuesta_tres,
-            respuesta_cuatro,
-            respuestaCorrecta
+
+def retos_actualizar(id_reto, nombre_reto, id_tema, descripcion, pregunta, img_reto=None,
+                     recompensa_monedas=10, costo_monedas=5,
+                     respuesta_uno='', respuesta_dos='',
+                     respuesta_tres='', respuesta_cuatro='',
+                     respuestaCorrecta='') -> int:
+    """
+    Actualiza un reto existente. img_reto es opcional.
+    """
+    try:
+        with connection.cursor() as cursor:
+            cursor.callproc('retos_actualizar', [
+                id_reto,
+                nombre_reto,
+                id_tema,
+                descripcion,
+                pregunta,
+                img_reto,
+                recompensa_monedas,
+                costo_monedas,
+                respuesta_uno,
+                respuesta_dos,
+                respuesta_tres,
+                respuesta_cuatro,
+                respuestaCorrecta
             ])
-        row = cursor.fetchone()
-        return int(row[0]) if row else 0
+            row = cursor.fetchone()
+            return int(row[0]) if row else 0
+    except DatabaseError as e:
+        raise
+
 
 def retos_eliminar(id_reto: int) -> int:
     with connection.cursor() as cursor:
@@ -99,3 +115,14 @@ def retos_eliminar(id_reto: int) -> int:
         row = cursor.fetchone()
         return int(row[0]) if row else 0
 
+
+def obtener_retos_por_tema_service(id_tema: int, id_perfil: int):
+    """
+    Obtiene todos los retos de un tema con el progreso del usuario.
+    Usa el SP obtener_retos_por_tema.
+    """
+    with connection.cursor() as cursor:
+        cursor.callproc('obtener_retos_por_tema', [id_tema, id_perfil])
+        columns = [col[0] for col in cursor.description]
+        results = cursor.fetchall()
+    return [dict(zip(columns, row)) for row in results]

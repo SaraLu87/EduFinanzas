@@ -44,7 +44,11 @@ class TipPeriodicaViewSet(viewsets.ViewSet):
         """Actualizar un tip existente"""
         serializer = TipPeriodicaCreateUpdateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        filas = tip_actualizar(int(pk), **serializer.validated_data)
+
+        # Extraer solo los campos que tip_actualizar acepta (sin id_perfil)
+        datos = {k: v for k, v in serializer.validated_data.items() if k != 'id_perfil'}
+        filas = tip_actualizar(int(pk), **datos)
+
         if filas == 0:
             return Response({"detail": "No encontrado"}, status=status.HTTP_404_NOT_FOUND)
         item = tip_ver(int(pk))

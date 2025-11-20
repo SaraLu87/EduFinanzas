@@ -50,16 +50,14 @@ def usuario_ver(id_usuario: int):
         row = cursor.fetchone()
         if not row:
             return None
-        
-        usuario = Usuarios(
-            id_usuario=row[0],
-            correo=row[1],
-            rol=row[2],
-            fecha_registro=row[3],
-        )
 
-        usuario.is_authenticated = True
-        return usuario
+        # Retornar diccionario en vez de objeto para serialización JSON
+        return {
+            "id_usuario": row[0],
+            "correo": row[1],
+            "rol": row[2],
+            "fecha_registro": row[3],
+        }
 
 def usuarios_listar():
     """
@@ -78,12 +76,27 @@ def usuarios_listar():
         ]
 
 
-def usuarios_actualizar(id_usuario: int, correo: str, contrasena: str, rol: str) -> int:
+def usuarios_actualizar(id_usuario: int, correo: str, rol: str, contrasena: str = None) -> int:
     """
     Actualiza los datos de un usuario existente.
+    Si no se proporciona contraseña, se mantiene la actual.
     """
     with connection.cursor() as cursor:
-        cursor.callproc('usuarios_actualizar', [id_usuario, correo, contrasena, rol])
+        # Si no hay contraseña, obtener la actual de la base de datos
+        if contrasena:
+            u.set_password(contrasena)
+            hash_con = u.password
+        else:
+            # Obtener la contraseña actual del usuario
+            usuario_actual = usuario_ver(id_usuario)
+            if not usuario_actual:
+                raise ValueError(f"Usuario con ID {id_usuario} no encontrado")
+            # Obtener el hash actual desde la base de datos
+            cursor.execute("SELECT contrasena FROM usuarios WHERE id_usuario = %s", [id_usuario])
+            row = cursor.fetchone()
+            hash_con = row[0] if row else None
+
+        cursor.callproc('usuarios_actualizar', [id_usuario, correo, hash_con, rol])
         cursor.execute("SELECT ROW_COUNT();")
         row = cursor.fetchone()
         return int(row[0]) if row else 0
@@ -102,7 +115,6 @@ def usuarios_eliminar(id_usuario: int) -> int:
 def login_usuario(correo: str, contrasena: str):
     """
     Inicia sesión y genera un token para un usuario existente.
-    Retorna token, datos del usuario y datos del perfil asociado.
     """
     with connection.cursor() as cursor:
         cursor.callproc('usuarios_logear', [correo])
@@ -121,25 +133,6 @@ def login_usuario(correo: str, contrasena: str):
         if not check_password(contrasena, hash_guardado):
             return False  # Contraseña incorrecta
 
-        # Obtener datos del perfil asociado
-        cursor.execute("""
-            SELECT id_perfil, nombre_perfil, edad, foto_perfil, monedas
-            FROM perfiles
-            WHERE id_usuario = %s
-            LIMIT 1
-        """, [id_usuario])
-        perfil_row = cursor.fetchone()
-
-        perfil_data = None
-        if perfil_row:
-            perfil_data = {
-                "id_perfil": perfil_row[0],
-                "nombre_perfil": perfil_row[1],
-                "edad": perfil_row[2],
-                "foto_perfil": perfil_row[3],
-                "monedas": perfil_row[4]
-            }
-
         # Generar token
         payload = {
             "id_usuario": id_usuario,
@@ -154,6 +147,5 @@ def login_usuario(correo: str, contrasena: str):
                 "id_usuario": id_usuario,
                 "correo": correo,
                 "rol": rol
-            },
-            "perfil": perfil_data
+            }
         }

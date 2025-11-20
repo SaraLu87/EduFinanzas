@@ -14,31 +14,23 @@ from .services import (
 class UsuarioViewSet(viewsets.ViewSet):
     """
     Endpoints:
-    - GET    /api/usuarios/        -> list (requiere rol Admin)
-    - GET    /api/usuarios/{id}/   -> retrieve (requiere autenticación)
-    - POST   /api/usuarios/        -> create (PÚBLICO - para registro)
-    - PUT    /api/usuarios/{id}/   -> update (requiere autenticación)
-    - DELETE /api/usuarios/{id}/   -> destroy (requiere autenticación)
+    - GET    /api/usuarios/        -> list
+    - GET    /api/usuarios/{id}/   -> retrieve
+    - POST   /api/usuarios/        -> create
+    - PUT    /api/usuarios/{id}/   -> update
+    - DELETE /api/usuarios/{id}/   -> destroy
     """
-    # Permisos por defecto para métodos autenticados
     permission_classes = [permisosUsuarios]
-
-    def get_permissions(self):
-        """
-        Retorna los permisos dinámicamente según la acción.
-        - create (POST): Público, permite registro sin autenticación
-        - list (GET /usuarios/): Solo administradores
-        - Otros métodos: Requieren autenticación
-        """
-        if self.action == "create":
-            # Permitir registro público (sin autenticación)
-            return []
-        elif self.action == "list":
-            # Solo administradores pueden listar todos los usuarios
-            return [permisosAdministrador()]
-        else:
-            # Otros métodos requieren autenticación
-            return [permisosUsuarios()]
+    
+    # def get_permissions(self):
+    #     """
+    #     Retorna los permisos dinámicamente según la acción.
+    #     """
+    #     if self.action == "list":  # Solo para el método list
+    #         permission_classes = [permisosAdministrador]
+    #     else:
+    #         permission_classes = self.permission_classes
+    #     return [perm() for perm in permission_classes]
     
     
     def list(self, request):
@@ -69,20 +61,27 @@ class UsuarioViewSet(viewsets.ViewSet):
         return Response(item, status=status.HTTP_200_OK)
 
     def destroy(self, request, pk=None):
-        filas = usuarios_eliminar(int(pk))
-        if filas == 0:
-            return Response({"detail": "Usuario no encontrado"}, status=status.HTTP_404_NOT_FOUND)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        from django.db import IntegrityError as DjangoIntegrityError
+        try:
+            filas = usuarios_eliminar(int(pk))
+            if filas == 0:
+                return Response({"detail": "Usuario no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except DjangoIntegrityError as e:
+            # Error de integridad referencial (foreign key constraint)
+            return Response(
+                {"detail": "No se puede eliminar este usuario porque tiene datos relacionados (perfiles, tips, progreso). Primero elimina los registros dependientes."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        except Exception as e:
+            # Otros errores
+            return Response(
+                {"detail": f"Error al eliminar usuario: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
-# ============================================================================
-# CLASE DE LOGIN - Autenticación de usuarios
-# ============================================================================
+# Clase para el logeo del usuario class LoginView(APIView):
 class LoginView(APIView):
-    """
-    Vista para iniciar sesión
-    Endpoint: POST /api/login_usuario/
-    No requiere autenticación (público)
-    """
     def post(self, request):
         correo = request.data.get("correo")
         contrasena = request.data.get("contrasena")
@@ -98,100 +97,91 @@ class LoginView(APIView):
         return Response(resultado, status=status.HTTP_200_OK)
 
 
-# ============================================================================
-# CLASE DE REGISTRO - Creación de usuario + perfil en una transacción
-# ============================================================================
-class RegisterView(APIView):
+# Clase para el registro de usuarios (usuario + perfil)
+class RegistroView(APIView):
     """
-    Vista para registro de nuevos usuarios
-    Endpoint: POST /api/register/
-
-    Crea un usuario y su perfil asociado en una sola operación
-    No requiere autenticación (público)
-
-    Datos esperados:
-    {
-        "correo": "usuario@ejemplo.com",
-        "contrasena": "ContraseñaSegura123!",
-        "rol": "Usuario",
-        "perfil": {
-            "nombre_perfil": "Juan Pérez",
-            "edad": 16
-        }
-    }
+    Endpoint para registrar un nuevo usuario con su perfil.
+    Proceso en dos pasos:
+    1. Crea el usuario con correo, contraseña y rol='Usuario'
+    2. Crea el perfil asociado con nombre, edad y foto opcional
     """
     def post(self, request):
+        # Extraer datos del usuario
+        correo = request.data.get("correo")
+        contrasena = request.data.get("contrasena")
+
+        # Extraer datos del perfil
+        nombre_perfil = request.data.get("nombre_perfil")
+        edad = request.data.get("edad")
+        foto_perfil = request.data.get("foto_perfil", "perfiles/default.png")
+
+        # Validar que los campos requeridos están presentes
+        if not correo or not contrasena:
+            return Response(
+                {"detail": "El correo y la contraseña son obligatorios"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not nombre_perfil or not edad:
+            return Response(
+                {"detail": "El nombre del perfil y la edad son obligatorios"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         try:
-            # Extraer datos del request
-            correo = request.data.get("correo")
-            contrasena = request.data.get("contrasena")
-            rol = request.data.get("rol", "Usuario")
-            perfil_data = request.data.get("perfil", {})
+            # Paso 1: Crear usuario con rol 'Usuario'
+            from .services import usuarios_crear
+            id_usuario = usuarios_crear(
+                correo=correo,
+                contrasena=contrasena,
+                rol='Usuario'
+            )
 
-            # Validar datos requeridos
-            if not correo or not contrasena:
+            if not id_usuario:
                 return Response(
-                    {"detail": "Correo y contraseña son requeridos"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            if not perfil_data.get("nombre_perfil") or not perfil_data.get("edad"):
-                return Response(
-                    {"detail": "Nombre y edad del perfil son requeridos"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            # Paso 1: Crear usuario
-            from perfiles.services import perfil_crear, perfil_ver
-
-            try:
-                nuevo_usuario_id = usuarios_crear(
-                    correo=correo,
-                    contrasena=contrasena,
-                    rol=rol
-                )
-            except Exception as e:
-                if "correo" in str(e).lower() or "duplicate" in str(e).lower():
-                    return Response(
-                        {"detail": "Este correo electrónico ya está registrado"},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
-                return Response(
-                    {"detail": f"Error al crear usuario: {str(e)}"},
+                    {"detail": "Error al crear el usuario"},
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
 
-            # Paso 2: Crear perfil asociado al usuario
-            try:
-                nuevo_perfil_id = perfil_crear(
-                    id_usuario=nuevo_usuario_id,
-                    nombre_perfil=perfil_data.get("nombre_perfil"),
-                    edad=int(perfil_data.get("edad")),
-                    foto_perfil="perfiles/default.png"
-                )
-            except Exception as e:
+            # Paso 2: Crear perfil asociado
+            from perfiles.services import perfil_crear
+            id_perfil = perfil_crear(
+                id_usuario=id_usuario,
+                nombre_perfil=nombre_perfil,
+                edad=int(edad),
+                foto_perfil=foto_perfil
+            )
+
+            if not id_perfil:
+                # Si falla la creación del perfil, idealmente deberíamos hacer rollback del usuario
+                # pero por ahora simplemente retornamos error
                 return Response(
-                    {"detail": f"Usuario creado pero error al crear perfil: {str(e)}"},
+                    {"detail": "Error al crear el perfil"},
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
 
-            # Paso 3: Obtener datos completos
-            usuario_creado = usuario_ver(nuevo_usuario_id)
-            perfil_creado = perfil_ver(nuevo_perfil_id)
+            # Obtener datos completos del usuario creado
+            from .services import usuario_ver
+            usuario = usuario_ver(id_usuario)
 
-            # Retornar respuesta exitosa
+            # Obtener datos del perfil creado
+            from perfiles.services import perfil_ver
+            perfil = perfil_ver(id_perfil)
+
+            # Retornar respuesta exitosa con los datos
             return Response(
                 {
-                    "message": "Registro exitoso",
-                    "usuario": usuario_creado,
-                    "perfil": perfil_creado
+                    "message": "Usuario registrado exitosamente",
+                    "usuario": usuario,
+                    "perfil": perfil
                 },
                 status=status.HTTP_201_CREATED
             )
 
         except Exception as e:
+            # Capturar cualquier error y devolverlo
             return Response(
-                {"detail": f"Error inesperado: {str(e)}"},
+                {"detail": f"Error en el registro: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 

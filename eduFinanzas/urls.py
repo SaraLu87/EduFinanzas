@@ -18,9 +18,11 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from temas.views import TemaViewSet
-from usuarios.views import UsuarioViewSet, LoginView, RegisterView
+from usuarios.views import UsuarioViewSet, LoginView, RegistroView
 from perfiles.views import PerfilViewSet
+from perfiles.views_usuario import PerfilMeView, PerfilMeUpdateView, ProgresoMeView, ProgresoTemasView
 from retos.views import RetoViewSet
+from retos.views_usuario import RetosPorTemaView, IniciarRetoView
 from tips.views import TipPeriodicaViewSet
 from progresos.views import ProgresoViewSet
 from solucionarReto.views import SolucionRetoView
@@ -43,31 +45,16 @@ urlpatterns = [
     path('api/', include(router.urls)),
     path('api/solucionar_reto/', SolucionRetoView.as_view(), name='solucionar_reto'),
     path('api/login_usuario/', LoginView.as_view(), name='login_usuario'),
-    path('api/register/', RegisterView.as_view(), name='register'),  # Endpoint de registro público
-]
+    path('api/registro/', RegistroView.as_view(), name='registro'),
 
-# ============================================================================
-# CONFIGURACIÓN PARA SERVIR ARCHIVOS MEDIA (IMÁGENES) EN DESARROLLO
-# ============================================================================
-# Pillow procesa y guarda las imágenes en MEDIA_ROOT (configurado en settings.py)
-# Esta configuración permite acceder a las imágenes a través de MEDIA_URL
-#
-# Ejemplo de uso:
-#   - MEDIA_ROOT = BASE_DIR / 'mediafiles'  (donde se guardan físicamente)
-#   - MEDIA_URL = 'media/'                   (URL para acceder)
-#   - Imagen guardada en: /mediafiles/perfiles/foto.jpg
-#   - URL de acceso: http://localhost:8000/media/perfiles/foto.jpg
-#
-# Las carpetas donde se guardan las imágenes son:
-#   - /mediafiles/perfiles/   → Fotos de perfil de usuarios
-#   - /mediafiles/temas/      → Imágenes de temas educativos
-#   - /mediafiles/retos/      → Imágenes de retos/desafíos
-#
-# IMPORTANTE: En producción, usar un servidor web (Nginx/Apache) para servir
-# archivos estáticos en lugar de Django, por razones de rendimiento y seguridad.
-# ============================================================================
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    # Endpoints para usuarios autenticados
+    path('api/perfil/me/', PerfilMeView.as_view(), name='perfil_me'),
+    path('api/perfil/me/update/', PerfilMeUpdateView.as_view(), name='perfil_me_update'),
+    path('api/perfil/me/progreso/', ProgresoMeView.as_view(), name='progreso_me'),
+    path('api/perfil/me/progreso-temas/', ProgresoTemasView.as_view(), name='progreso_temas'),
+    path('api/temas/<int:id_tema>/retos/', RetosPorTemaView.as_view(), name='retos_por_tema'),
+    path('api/retos/<int:id_reto>/iniciar/', IniciarRetoView.as_view(), name='iniciar_reto'),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
 

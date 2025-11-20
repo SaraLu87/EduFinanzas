@@ -86,7 +86,8 @@ WSGI_APPLICATION = 'eduFinanzas.wsgi.application'
 ASGI_APPLICATION = 'eduFinanzas.asgi.application'
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # o el puerto que uses en tu front
+    "http://localhost:5173",
+    "http://localhost:5174",  # Puerto alternativo cuando 5173 está ocupado
 ]
 
 # Database
@@ -109,7 +110,11 @@ DATABASES = {
 # ---- DRF ----
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': ['rest_framework.renderers.JSONRenderer'],
-    'DEFAULT_PARSER_CLASSES': ['rest_framework.parsers.JSONParser'],
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework.parsers.JSONParser',
+        'rest_framework.parsers.MultiPartParser',  # Para archivos/imágenes
+        'rest_framework.parsers.FormParser',  # Para formularios
+    ],
     'UNAUTHENTICATED_USER': None,
     'DEFAULT_AUTHENTICATION_CLASSES': ["usuarios.authentication.JWTAuthentication",],
 }

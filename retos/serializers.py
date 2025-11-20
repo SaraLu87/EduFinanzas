@@ -6,11 +6,7 @@ class RetoSerializer(serializers.Serializer):
     id_tema = serializers.IntegerField()
     descripcion = serializers.CharField()
     pregunta = serializers.CharField()
-    img_reto = serializers.ImageField(
-        required=False,
-        allow_null=True,
-        default = None
-    )
+    img_reto = serializers.ImageField(required=False, allow_null=True, default=None)
     recompensa_monedas = serializers.IntegerField()
     costo_monedas = serializers.IntegerField()
     respuesta_uno = serializers.CharField(allow_blank=True, required=False)
@@ -24,11 +20,7 @@ class RetoCreateUpdateSerializer(serializers.Serializer):
     id_tema = serializers.IntegerField()
     descripcion = serializers.CharField()
     pregunta = serializers.CharField()
-    img_reto = serializers.ImageField(
-        required=False,
-        allow_null=True,
-        default = None
-    )
+    img_reto = serializers.ImageField(required=False, allow_null=True, default=None)
     recompensa_monedas = serializers.IntegerField()
     costo_monedas = serializers.IntegerField()
     respuesta_uno = serializers.CharField(allow_blank=True, required=False)

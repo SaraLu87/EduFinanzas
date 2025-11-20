@@ -4,6 +4,23 @@ from rest_framework.authentication import BaseAuthentication
 from rest_framework import exceptions
 from usuarios.services import usuario_ver
 
+
+class User:
+    """
+    Clase simple para representar un usuario autenticado.
+    Actúa como wrapper para los datos del usuario que vienen del servicio.
+    """
+    def __init__(self, user_data):
+        self.id_usuario = user_data.get("id_usuario")
+        self.correo = user_data.get("correo")
+        self.rol = user_data.get("rol")
+        self.fecha_registro = user_data.get("fecha_registro")
+        self.is_authenticated = True  # Siempre es True para usuarios autenticados
+
+    def __str__(self):
+        return f"{self.correo} ({self.rol})"
+
+
 class JWTAuthentication(BaseAuthentication):
     """
     Autenticación personalizada con JWT para DRF
@@ -29,9 +46,12 @@ class JWTAuthentication(BaseAuthentication):
             raise exceptions.AuthenticationFailed("Token inválido")
 
         # Buscar el usuario en tu servicio
-        usuario = usuario_ver(payload.get("id_usuario"))
-        if not usuario:
+        usuario_data = usuario_ver(payload.get("id_usuario"))
+        if not usuario_data:
             raise exceptions.AuthenticationFailed("Usuario no encontrado")
+
+        # Crear objeto User con los datos del usuario
+        usuario = User(usuario_data)
 
         # DRF espera (user, auth)
         # user → objeto que represente al usuario

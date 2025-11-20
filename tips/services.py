@@ -1,11 +1,16 @@
 from django.db import connection, DatabaseError
 
 
-def tip_crear(id_perfil: int, nombre: str, descripcion: str):
+def tip_crear(nombre: str, descripcion: str, id_perfil: int = None):
     """
     Crea un nuevo tip periódico usando el procedimiento almacenado 'tip_crear'
+    Si no se proporciona id_perfil, se usa 1 por defecto (perfil administrador)
     """
     try:
+        # Si no hay id_perfil, usar 1 como valor por defecto (perfil admin/sistema)
+        if id_perfil is None:
+            id_perfil = 1
+
         with connection.cursor() as cursor:
             cursor.callproc('tip_crear', [id_perfil, nombre, descripcion])
             row = cursor.fetchone()

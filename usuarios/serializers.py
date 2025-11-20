@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 class UsuarioCreateUpdateSerializer(serializers.Serializer):
     correo = serializers.CharField(max_length=100)
-    contrasena = serializers.CharField(max_length=255)
+    contrasena = serializers.CharField(max_length=255, required=False, allow_blank=True)
     rol = serializers.ChoiceField(choices=['Usuario', 'Administrador'], default='Usuario')
 
 
